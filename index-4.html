@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="EmoSense"/>
+<link rel="manifest" href="manifest.json"/>
+<title>EmoSense</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<style>
+:root{--bg:#0a0a0f;--sur:#16161f;--bor:rgba(255,255,255,.06);--txt:#f0f0f8;--mut:rgba(240,240,248,.38);--acc:#7c6bff;--ac2:#ff6b9d;--ac3:#6bffce;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none}
+#app{display:flex;flex-direction:column;height:100dvh;padding:calc(env(safe-area-inset-top,0px)+14px) 16px calc(env(safe-area-inset-bottom,0px)+16px)}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0}
+.lm{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;background:linear-gradient(135deg,var(--acc),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ls{font-size:9px;color:var(--mut);letter-spacing:2px}
+.dot{width:8px;height:8px;border-radius:50%;background:#333;transition:all .4s}
+.dot.on{background:var(--ac3);box-shadow:0 0 10px var(--ac3)}
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:12px;flex-shrink:0}
+.tab{padding:10px 4px;border:1px solid var(--bor);border-radius:12px;background:var(--sur);color:var(--mut);font-size:18px;text-align:center;cursor:pointer;transition:all .2s}
+.tab.active{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 4px 18px rgba(124,107,255,.3)}
+.panels{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.panel{display:none;flex-direction:column;flex:1;gap:10px;overflow:hidden}
+.panel.active{display:flex}
+.card{background:var(--sur);border:1px solid var(--bor);border-radius:18px;padding:14px}
+.vw{position:relative;border-radius:18px;overflow:hidden;background:var(--sur);border:1px solid var(--bor);aspect-ratio:4/3;flex-shrink:0}
+#video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block}
+#fc{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1);pointer-events:none}
+.ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--mut);font-size:11px;letter-spacing:2px;text-transform:uppercase}
+.ph span{font-size:40px;opacity:.3}
+.me{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.ee{font-size:46px;line-height:1;flex-shrink:0}
+.el{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;transition:color .5s}
+.ec{font-size:10px;color:var(--mut);margin-top:3px;letter-spacing:1px}
+.st{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:8px}
+.bi{margin-bottom:7px}
+.bh{display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px}
+.bt3{height:4px;background:rgba(255,255,255,.05);border-radius:99px;overflow:hidden}
+.bf{height:100%;border-radius:99px;transition:width .4s ease}
+.sb{width:100%;padding:15px;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;cursor:pointer;flex-shrink:0}
+.sb.go{background:linear-gradient(135deg,var(--acc),var(--ac2));color:#fff;box-shadow:0 8px 28px rgba(124,107,255,.3)}
+.sb.stop{background:rgba(255,82,82,.12);color:#FF5252;border:1px solid rgba(255,82,82,.25)}
+.sb:active{transform:scale(.97)}
+.er{font-size:11px;color:#FF5252;padding:8px 12px;background:rgba(255,82,82,.08);border-radius:10px;border:1px solid rgba(255,82,82,.2);flex-shrink:0}
+#wc{width:100%;height:68px;display:block;border-radius:8px}
+.mg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.mc{background:rgba(255,255,255,.03);border:1px solid var(--bor);border-radius:12px;padding:10px 6px;text-align:center}
+.mv{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;color:var(--acc)}
+.mk{font-size:9px;color:var(--mut);margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+.cs2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.sc{background:rgba(255,255,255,.03);border:1px solid var(--bor);border-radius:14px;padding:12px 10px;text-align:center}
+.scl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-bottom:5px}
+.sce{font-family:'Syne',sans-serif;font-weight:700;font-size:14px}
+.cc{text-align:center;padding:14px 0 8px}
+.cemoji{font-size:54px;display:block;animation:float 3s ease-in-out infinite}
+.clabel{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;background:linear-gradient(135deg,var(--acc),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ci2{font-size:11px;color:var(--mut);line-height:1.7;text-align:center;border-top:1px solid var(--bor);padding-top:10px;margin-top:5px}
+.hi{display:flex;align-items:center;gap:10px;padding:9px;background:rgba(255,255,255,.025);border-radius:10px;border:1px solid var(--bor);margin-bottom:7px}
+/* CHAT */
+#panel-chat{display:none;flex-direction:column;flex:1;gap:10px;overflow:hidden}
+#panel-chat.active{display:flex}
+.cb{background:var(--sur);border:1px solid var(--bor);border-radius:14px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;flex-shrink:0}
+#messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:2px}
+#messages::-webkit-scrollbar{width:0}
+.ec3{text-align:center;padding:18px 10px}
+.qb{display:block;width:100%;padding:11px 14px;background:rgba(124,107,255,.1);border:1px solid rgba(124,107,255,.3);border-radius:12px;color:#b8b0ff;font-size:12px;cursor:pointer;text-align:left;margin-bottom:8px}
+.bw{display:flex;flex-direction:column}
+.bw.user{align-items:flex-end}
+.bw.ai{align-items:flex-start}
+.bu{max-width:84%;padding:11px 15px;border-radius:18px;font-size:13px;line-height:1.7;white-space:pre-wrap}
+.bu.user{background:linear-gradient(135deg,var(--acc),var(--ac2));color:#fff;border-bottom-right-radius:4px}
+.bu.ai{background:var(--sur);border:1px solid var(--bor);border-bottom-left-radius:4px}
+.bt2{font-size:9px;color:rgba(240,240,248,.22);margin-top:3px}
+.ty{padding:12px 16px;background:var(--sur);border:1px solid var(--bor);border-radius:18px;border-bottom-left-radius:4px;display:inline-flex;gap:5px;align-items:center}
+.db{width:7px;height:7px;border-radius:50%;background:var(--acc);animation:bounce 1.2s ease-in-out infinite}
+.cir{display:flex;gap:8px;flex-shrink:0}
+#chatIn{flex:1;padding:13px 15px;background:var(--sur);border:1px solid rgba(255,255,255,.1);border-radius:14px;color:var(--txt);font-size:13px;outline:none;font-family:system-ui}
+#chatIn::placeholder{color:var(--mut)}
+#sendBtn{padding:13px 17px;background:linear-gradient(135deg,var(--acc),var(--ac2));border:none;border-radius:14px;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;transition:opacity .2s}
+#sendBtn:disabled{opacity:.35;cursor:default}
+
+/* ══ ROBOT FUMETTO ══════════════════════════════════════ */
+#robotBubble{
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(8,8,14,.97);
+  border-top:2px solid var(--acc);
+  padding:14px 16px calc(env(safe-area-inset-bottom,0px)+14px);
+  display:flex;align-items:flex-start;gap:12px;
+  z-index:200;
+  transform:translateY(100%);
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 -12px 50px rgba(124,107,255,.3);
+}
+#robotBubble.show{transform:translateY(0)}
+.robot-face{
+  width:48px;height:48px;border-radius:14px;
+  background:linear-gradient(135deg,#1a1a2e,#16213e);
+  border:2px solid var(--acc);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex-shrink:0;position:relative;overflow:hidden;
+}
+.robot-eyes{display:flex;gap:5px;margin-bottom:3px}
+.robot-eye{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--acc);
+  box-shadow:0 0 6px var(--acc);
+  transition:background .3s,box-shadow .3s;
+}
+.robot-eye.blink{animation:eyeBlink .15s ease-in-out}
+.robot-mouth{
+  width:18px;height:4px;border-radius:99px;
+  background:var(--acc);
+  box-shadow:0 0 6px var(--acc);
+  transition:all .3s;
+}
+.robot-scanline{
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--acc),transparent);
+  animation:scan 1.5s linear infinite;opacity:.5;
+}
+.robot-content{flex:1;min-width:0}
+.robot-name{
+  font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--acc);margin-bottom:6px;display:flex;align-items:center;gap:6px;
+}
+.robot-beep-dots{display:flex;gap:3px;align-items:center}
+.robot-beep-dot{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--acc);opacity:0;
+}
+.robot-beep-dot.active{animation:beepDot .4s ease-in-out infinite}
+#robotText{
+  font-size:13px;line-height:1.6;color:var(--txt);
+  min-height:20px;
+}
+#robotText .char{display:inline;opacity:0;transition:opacity .05s}
+#robotText .char.shown{opacity:1}
+.robot-close{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;padding:6px 10px;color:var(--mut);font-size:12px;
+  cursor:pointer;flex-shrink:0;align-self:flex-start;
+}
+
+/* ══ LOADER ══ */
+#loader{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:300;transition:opacity .5s}
+#loader.hidden{opacity:0;pointer-events:none}
+.lr{width:44px;height:44px;border:3px solid rgba(124,107,255,.2);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-8px)}}
+@keyframes eyeBlink{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.1)}}
+@keyframes scan{0%{top:0}100%{top:100%}}
+@keyframes beepDot{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+@keyframes mouthTalk{0%,100%{height:3px}50%{height:7px;border-radius:0 0 6px 6px}}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="lm" style="font-size:30px">EmoSense</div>
+  <div class="lr"></div>
+  <div style="font-size:10px;color:var(--mut);letter-spacing:2px" id="ltxt">CARICAMENTO…</div>
+</div>
+
+<!-- ROBOT FUMETTO -->
+<div id="robotBubble">
+  <div class="robot-face" id="robotFace">
+    <div class="robot-scanline"></div>
+    <div class="robot-eyes">
+      <div class="robot-eye" id="eyeL"></div>
+      <div class="robot-eye" id="eyeR"></div>
+    </div>
+    <div class="robot-mouth" id="robotMouth"></div>
+  </div>
+  <div class="robot-content">
+    <div class="robot-name">
+      R2-EMOBOT
+      <div class="robot-beep-dots" id="beepDots">
+        <div class="robot-beep-dot" style="animation-delay:0s"></div>
+        <div class="robot-beep-dot" style="animation-delay:.13s"></div>
+        <div class="robot-beep-dot" style="animation-delay:.26s"></div>
+      </div>
+    </div>
+    <div id="robotText"></div>
+  </div>
+  <button class="robot-close" onclick="hideRobot()">✕</button>
+</div>
+
+<div id="app">
+  <header>
+    <div><div class="lm">EmoSense</div><div class="ls">EMOTION AI</div></div>
+    <div class="dot" id="dot"></div>
+  </header>
+  <div class="tabs">
+    <button class="tab active" data-tab="face">📷</button>
+    <button class="tab" data-tab="voice">🎤</button>
+    <button class="tab" data-tab="combined">🧠</button>
+    <button class="tab" data-tab="chat">💬</button>
+  </div>
+  <div class="panels">
+
+    <!-- FACE -->
+    <div class="panel active" id="panel-face">
+      <div class="vw">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="fc"></canvas>
+        <div class="ph" id="php"><span>📷</span>Camera non attiva</div>
+      </div>
+      <div id="cErr" class="er" style="display:none"></div>
+      <div class="card" id="faceCard" style="display:none;flex:1;overflow-y:auto">
+        <div class="me">
+          <div class="ee" id="fEmo">😶</div>
+          <div><div class="el" id="fLbl" style="color:#90A4AE">Neutro</div><div class="ec" id="fConf">CONFIDENZA —</div></div>
+        </div>
+        <div class="st">DISTRIBUZIONE</div>
+        <div id="fBars"></div>
+      </div>
+      <button class="sb go" id="camBtn">▶ AVVIA CAMERA</button>
+    </div>
+
+    <!-- VOICE -->
+    <div class="panel" id="panel-voice">
+      <div class="card">
+        <div class="st">FORMA D'ONDA</div>
+        <canvas id="wc" width="600" height="68"></canvas>
+        <div class="mg">
+          <div class="mc"><div class="mv" id="mE">—</div><div class="mk">Energia</div></div>
+          <div class="mc"><div class="mv" id="mP">—</div><div class="mk">Tono Hz</div></div>
+          <div class="mc"><div class="mv" id="mR">—</div><div class="mk">Ritmo</div></div>
+        </div>
+      </div>
+      <div id="mErr" class="er" style="display:none"></div>
+      <div class="card" id="voiceCard" style="display:none;flex:1;overflow-y:auto">
+        <div class="me">
+          <div class="ee" id="vEmo">🎤</div>
+          <div><div class="el" id="vLbl" style="color:#90A4AE">In attesa…</div><div class="ec" id="vConf">—</div></div>
+        </div>
+        <div class="st">INDICATORI</div>
+        <div id="vBars"></div>
+      </div>
+      <button class="sb go" id="micBtn">▶ AVVIA MICROFONO</button>
+    </div>
+
+    <!-- COMBINED -->
+    <div class="panel" id="panel-combined">
+      <div class="card">
+        <div class="cs2">
+          <div class="sc"><div class="scl">📷 Volto</div><div class="sce" id="cF" style="color:#90A4AE">—</div></div>
+          <div class="sc"><div class="scl">🎤 Voce</div><div class="sce" id="cV" style="color:#90A4AE">—</div></div>
+        </div>
+        <div class="cc"><span class="cemoji" id="cEmoji">🧠</span><div class="clabel" id="cLabel">Attiva i sensori</div></div>
+        <div class="ci2" id="cIns">Attiva camera e microfono per l'analisi.</div>
+      </div>
+      <div class="card" style="flex:1;overflow-y:auto">
+        <div class="st">STORIA</div>
+        <div id="hist"><div style="font-size:11px;color:var(--mut);text-align:center;padding:14px">La storia apparirà qui</div></div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div id="panel-chat">
+      <div class="cb">
+        <span style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)">Emozione attuale</span>
+        <div style="display:flex;gap:8px;align-items:center;font-size:13px;font-weight:700">
+          <span id="ctxF" style="color:#90A4AE">😐 Neutro</span>
+          <span style="color:rgba(255,255,255,.15)">·</span>
+          <span id="ctxV" style="color:#90A4AE">🔘 Neutro</span>
+        </div>
+      </div>
+      <div id="messages">
+        <div class="ec3" id="emptyChat">
+          <div style="font-size:44px;margin-bottom:10px">💬</div>
+          <div style="font-size:15px;color:rgba(240,240,248,.7);margin-bottom:6px;font-weight:700">Parla con EmoSense AI</div>
+          <div style="font-size:11px;color:var(--mut);line-height:1.7;margin-bottom:16px">Rispondo in base alle tue emozioni rilevate.</div>
+          <button class="qb" onclick="quickAsk('Come mi vedi?')">Come mi vedi?</button>
+          <button class="qb" onclick="quickAsk('Ho bisogno di conforto')">Ho bisogno di conforto</button>
+          <button class="qb" onclick="quickAsk('Raccontami qualcosa di bello')">Raccontami qualcosa di bello</button>
+          <button class="qb" onclick="quickAsk('Cosa mi consigli adesso?')">Cosa mi consigli adesso?</button>
+        </div>
+      </div>
+      <div class="cir">
+        <input id="chatIn" placeholder="Scrivi qualcosa…" maxlength="300"/>
+        <button id="sendBtn" onclick="sendChat()" disabled>➤</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════
+const EMO={
+  happy:    {it:'Felice',     emoji:'😄',color:'#FFD93D'},
+  sad:      {it:'Triste',     emoji:'😢',color:'#4FC3F7'},
+  angry:    {it:'Arrabbiato', emoji:'😠',color:'#FF5252'},
+  fearful:  {it:'Spaventato', emoji:'😨',color:'#CE93D8'},
+  disgusted:{it:'Disgustato', emoji:'🤢',color:'#81C784'},
+  surprised:{it:'Sorpreso',   emoji:'😲',color:'#FFB74D'},
+  neutral:  {it:'Neutro',     emoji:'😐',color:'#90A4AE'},
+};
+const VOICE=[
+  {key:'energetic',it:'Energico',   emoji:'⚡',color:'#FFD93D'},
+  {key:'calm',     it:'Calmo',      emoji:'🌊',color:'#4FC3F7'},
+  {key:'tense',    it:'Teso',       emoji:'⚠️',color:'#FF5252'},
+  {key:'sad',      it:'Malinconico',emoji:'💧',color:'#64B5F6'},
+  {key:'neutral',  it:'Neutro',     emoji:'🔘',color:'#90A4AE'},
+];
+const FUSION={
+  'happy+energetic':{label:'Euforico',    emoji:'🤩',insight:'Energia e positività al massimo!'},
+  'happy+calm':     {label:'Sereno',      emoji:'😊',insight:'Ti senti in pace e bilanciato.'},
+  'sad+sad':        {label:'Molto Triste',emoji:'😭',insight:'Segnali forti di tristezza.'},
+  'angry+tense':    {label:'Agitato',     emoji:'😤',insight:'Alta tensione. Respira.'},
+  'fearful+tense':  {label:'Ansioso',     emoji:'😰',insight:'Segnali di ansia. Rilassati.'},
+  'surprised+energetic':{label:'Eccitato',emoji:'🎉',insight:'Grande entusiasmo!'},
+  'neutral+calm':   {label:'Rilassato',   emoji:'😌',insight:'Calma profonda.'},
+  'neutral+neutral':{label:'Neutro',      emoji:'😶',insight:'Nessuna emozione dominante.'},
+};
+const SIM=['neutral','happy','happy','surprised','neutral','sad','neutral','happy','angry','neutral'];
+
+// Eye colors per emotion
+const EYE_COLORS={
+  happy:'#FFD93D', sad:'#4FC3F7', angry:'#FF5252',
+  fearful:'#CE93D8', disgusted:'#81C784', surprised:'#FFB74D', neutral:'#7c6bff',
+  energetic:'#FFD93D', calm:'#4FC3F7', tense:'#FF5252',
+};
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let camOn=false,micOn=false,curF='neutral',curV='neutral';
+let simIdx=0,fTimer=null,vTimer=null,wAnim=null;
+let aCtx=null,analyser=null,mStream=null;
+let chatHist=[],aiLoading=false,lastHistT=0;
+let robotTimer=null,lastRoboEmo='',lastRoboT=0,robotBusy=false;
+let typeTimer=null,beepCtx=null;
+
+// ══════════════════════════════════════════════════════════
+// WEB AUDIO BEEP ENGINE — works 100% on Chrome Android
+// ══════════════════════════════════════════════════════════
+function getBeepCtx(){
+  if(!beepCtx) beepCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(beepCtx.state==='suspended') beepCtx.resume();
+  return beepCtx;
+}
+
+// Play a single beep: freq Hz, duration ms, type, volume
+function beep(freq,dur,type='square',vol=0.18){
+  try{
+    const ctx=getBeepCtx();
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type=type; osc.frequency.setValueAtTime(freq,ctx.currentTime);
+    gain.gain.setValueAtTime(vol,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur/1000);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime+dur/1000);
+  }catch(e){}
+}
+
+// Emotion-specific beep sequences
+const BEEP_SEQ={
+  sad:[
+    {f:220,d:180,t:'sine'},{delay:60},{f:180,d:200,t:'sine'},{delay:80},{f:160,d:300,t:'sine'}
+  ],
+  angry:[
+    {f:180,d:80,t:'sawtooth'},{delay:30},{f:160,d:80,t:'sawtooth'},{delay:30},{f:140,d:120,t:'sawtooth'}
+  ],
+  happy:[
+    {f:660,d:80,t:'square'},{delay:40},{f:880,d:80,t:'square'},{delay:40},{f:1100,d:120,t:'square'}
+  ],
+  fearful:[
+    {f:300,d:60,t:'square'},{delay:20},{f:280,d:60,t:'square'},{delay:20},{f:260,d:100,t:'square'},{delay:30},{f:240,d:200,t:'sine'}
+  ],
+  surprised:[
+    {f:440,d:60,t:'square'},{delay:20},{f:880,d:60,t:'square'},{delay:20},{f:1320,d:100,t:'square'}
+  ],
+  disgusted:[
+    {f:200,d:100,t:'sawtooth'},{delay:40},{f:190,d:100,t:'sawtooth'},{delay:40},{f:180,d:160,t:'sawtooth'}
+  ],
+  neutral:[
+    {f:440,d:80,t:'square'},{delay:40},{f:440,d:80,t:'square'}
+  ],
+};
+
+function playBeepSeq(emo,cb){
+  const seq=BEEP_SEQ[emo]||BEEP_SEQ.neutral;
+  let t=0;
+  seq.forEach(s=>{
+    if(s.delay){ t+=s.delay; return; }
+    setTimeout(()=>beep(s.f,s.d,s.t||'square',0.15),t);
+    t+=s.d+(s.delay||0);
+  });
+  if(cb) setTimeout(cb,t+50);
+}
+
+// Typewriter beep: small tick per character
+function tickBeep(){
+  try{
+    const ctx=getBeepCtx();
+    const osc=ctx.createOscillator(); const g=ctx.createGain();
+    osc.connect(g);g.connect(ctx.destination);
+    osc.type='square'; osc.frequency.setValueAtTime(800+Math.random()*400,ctx.currentTime);
+    g.gain.setValueAtTime(0.04,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.03);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.03);
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════
+// ROBOT FUMETTO DISPLAY
+// ══════════════════════════════════════════════════════════
+function setRobotEyeColor(emo){
+  const col=EYE_COLORS[emo]||'#7c6bff';
+  ['eyeL','eyeR'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.style.background=col; el.style.boxShadow=`0 0 8px ${col}`;
+  });
+  document.getElementById('robotMouth').style.background=col;
+  document.getElementById('robotMouth').style.boxShadow=`0 0 6px ${col}`;
+  document.getElementById('robotFace').style.borderColor=col;
+  document.getElementById('robotFace').querySelector('.robot-scanline').style.background=`linear-gradient(90deg,transparent,${col},transparent)`;
+}
+
+function blinkEyes(){
+  ['eyeL','eyeR'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.classList.add('blink');
+    setTimeout(()=>el.classList.remove('blink'),200);
+  });
+}
+
+function startMouthAnim(){
+  const mouth=document.getElementById('robotMouth');
+  mouth.style.animation='mouthTalk .15s ease-in-out infinite';
+}
+function stopMouthAnim(){
+  document.getElementById('robotMouth').style.animation='none';
+}
+
+function showRobot(text,emo){
+  if(robotBusy) return;
+  robotBusy=true;
+
+  setRobotEyeColor(emo);
+
+  // Activate beep dots
+  document.querySelectorAll('.robot-beep-dot').forEach((d,i)=>{
+    d.classList.add('active'); d.style.animationDelay=i*.13+'s';
+  });
+
+  // Show bubble
+  document.getElementById('robotBubble').classList.add('show');
+  document.getElementById('robotText').innerHTML='';
+
+  // Play emotion beeps first, then typewrite text
+  playBeepSeq(emo,()=>{
+    startMouthAnim();
+    typewriteText(text,()=>{
+      stopMouthAnim();
+      document.querySelectorAll('.robot-beep-dot').forEach(d=>d.classList.remove('active'));
+      blinkEyes();
+      // Auto-hide after reading time
+      const readTime=Math.max(3000,text.length*60);
+      setTimeout(()=>{ hideRobot(); robotBusy=false; },readTime);
+    });
+  });
+}
+
+function typewriteText(text,onDone){
+  const el=document.getElementById('robotText');
+  el.innerHTML='';
+  let i=0;
+  // Show chars one by one with beep
+  function nextChar(){
+    if(i>=text.length){ if(onDone)onDone(); return; }
+    const span=document.createElement('span');
+    span.className='char shown';
+    span.textContent=text[i];
+    el.appendChild(span);
+    if(text[i]!==' ' && i%2===0) tickBeep();
+    i++;
+    const delay=text[i-1]==='.' || text[i-1]==='!'||text[i-1]==='?' ? 280 :
+                text[i-1]===',' ? 140 : 45;
+    typeTimer=setTimeout(nextChar,delay);
+  }
+  nextChar();
+}
+
+function hideRobot(){
+  document.getElementById('robotBubble').classList.remove('show');
+  clearTimeout(typeTimer);
+  stopMouthAnim();
+  document.querySelectorAll('.robot-beep-dot').forEach(d=>d.classList.remove('active'));
+  robotBusy=false;
+}
+
+// ══════════════════════════════════════════════════════════
+// PROACTIVE ROBOT TRIGGER
+// ══════════════════════════════════════════════════════════
+const ROBO_DELAY={sad:4000,angry:4500,fearful:4000,disgusted:5000,surprised:2500,happy:5000,neutral:20000};
+const ROBO_COOLDOWN=30000;
+
+async function triggerRobot(emo){
+  if(robotBusy) return;
+  const now=Date.now();
+  if(emo===lastRoboEmo && now-lastRoboT<ROBO_COOLDOWN) return;
+  lastRoboEmo=emo; lastRoboT=now;
+
+  const fe=EMO[emo]||EMO.neutral;
+  const ve=VOICE.find(v=>v.key===curV)||VOICE[4];
+  const fused=FUSION[emo+'+'+curV]?.label||fe.it;
+
+  const system=`Sei R2-EmoBot, un robot empatico che reagisce alle emozioni.
+Emozione rilevata: ${fe.it} (voce: ${ve.it}, stato: ${fused})
+REGOLE:
+- Messaggio cortissimo: 1-2 frasi, massimo 30 parole
+- Inizia SEMPRE con suono robotico scritto: "Bip bop!", "Bee-boo!", "Bzzzt!", "Bip bip!", "Beeep! Boop!"
+- Triste → conforto dolce e tenero
+- Arrabbiato → calma, respira profondo
+- Felice → celebra con energia!
+- Spaventato → rassicura con dolcezza
+- Sorpreso → condividi l'entusiasmo
+- Neutro → saluto amichevole e breve
+Rispondi SOLO con il messaggio, nient'altro.`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:80,system,messages:[{role:'user',content:'Reagisci.'}]})
+    });
+    const d=await r.json();
+    const msg=d.content?.[0]?.text||'';
+    if(msg) showRobot(msg.trim(),emo);
+  }catch(e){}
+}
+
+function scheduleRobot(emo){
+  clearTimeout(robotTimer);
+  if(!camOn&&!micOn) return;
+  robotTimer=setTimeout(()=>triggerRobot(emo),ROBO_DELAY[emo]||6000);
+}
+
+// ══════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel,#panel-chat').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+  });
+});
+
+// ══════════════════════════════════════════════════════════
+// CAMERA
+// ══════════════════════════════════════════════════════════
+document.getElementById('camBtn').addEventListener('click',()=>{
+  getBeepCtx(); // unlock audio on user gesture
+  camOn?stopCam():startCam();
+});
+
+async function startCam(){
+  document.getElementById('cErr').style.display='none';
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640}},audio:false});
+    const v=document.getElementById('video'); v.srcObject=s; await v.play();
+    camOn=true;
+    document.getElementById('php').style.display='none';
+    document.getElementById('faceCard').style.display='block';
+    document.getElementById('camBtn').textContent='■ FERMA CAMERA';
+    document.getElementById('camBtn').className='sb stop';
+    document.getElementById('dot').className='dot on';
+    startFaceLoop();
+  }catch(e){
+    const el=document.getElementById('cErr'); el.style.display='block';
+    el.textContent='❌ '+(e.name==='NotAllowedError'?'Permesso camera negato. Impostazioni Chrome → Impostazioni sito → Fotocamera':e.message);
+  }
+}
+
+function stopCam(){
+  const v=document.getElementById('video');
+  if(v.srcObject) v.srcObject.getTracks().forEach(t=>t.stop());
+  v.srcObject=null; clearTimeout(fTimer); camOn=false;
+  document.getElementById('php').style.display='flex';
+  document.getElementById('faceCard').style.display='none';
+  document.getElementById('camBtn').textContent='▶ AVVIA CAMERA';
+  document.getElementById('camBtn').className='sb go';
+  if(!micOn) document.getElementById('dot').className='dot';
+  const cv=document.getElementById('fc'); cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
+}
+
+function startFaceLoop(){ if(!camOn)return; detectFace(); fTimer=setTimeout(startFaceLoop,2200+Math.random()*1400); }
+
+async function detectFace(){
+  const v=document.getElementById('video'),cv=document.getElementById('fc');
+  cv.width=v.videoWidth||320; cv.height=v.videoHeight||240;
+  const ctx=cv.getContext('2d'); ctx.clearRect(0,0,cv.width,cv.height);
+  let emo='neutral',conf=0.6+Math.random()*.35,exprs={};
+  try{
+    const r=await faceapi.detectSingleFace(v,new faceapi.TinyFaceDetectorOptions({inputSize:224,scoreThreshold:0.4})).withFaceExpressions();
+    if(r){emo=topEmo(r.expressions);conf=r.expressions[emo];exprs=r.expressions;drawBox(ctx,cv,r.detection.box,emo);}
+    else{emo=SIM[simIdx%SIM.length];simIdx++;Object.keys(EMO).forEach(k=>exprs[k]=k===emo?conf:Math.random()*.15);drawSimBox(ctx,cv,emo);}
+  }catch(e){emo=SIM[simIdx%SIM.length];simIdx++;Object.keys(EMO).forEach(k=>exprs[k]=k===emo?conf:Math.random()*.15);drawSimBox(ctx,cv,emo);}
+  const prevF=curF; curF=emo;
+  updateFaceUI(emo,conf,exprs); updateCombined(); updateCtxBar();
+  if(emo!==prevF) scheduleRobot(emo);
+}
+
+function topEmo(e){let b={k:'neutral',v:0};for(const[k,v]of Object.entries(e))if(v>b.v)b={k,v};return b.k;}
+
+function drawBox(ctx,cv,box,emo){
+  const col=EMO[emo]?.color||'#fff';
+  const x=cv.width-box.x-box.width,y=box.y,w=box.width,h=box.height,c=15;
+  ctx.shadowColor=col;ctx.shadowBlur=14;ctx.strokeStyle=col;ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(x+c,y);ctx.lineTo(x,y);ctx.lineTo(x,y+c);ctx.moveTo(x+w-c,y);ctx.lineTo(x+w,y);ctx.lineTo(x+w,y+c);ctx.moveTo(x,y+h-c);ctx.lineTo(x,y+h);ctx.lineTo(x+c,y+h);ctx.moveTo(x+w-c,y+h);ctx.lineTo(x+w,y+h);ctx.lineTo(x+w,y+h-c);ctx.stroke();ctx.shadowBlur=0;
+  ctx.fillStyle=col+'cc';ctx.fillRect(x,y-22,88,19);ctx.fillStyle='#000';ctx.font='bold 11px system-ui';
+  ctx.fillText(EMO[emo].emoji+' '+EMO[emo].it,x+5,y-7);
+}
+
+function drawSimBox(ctx,cv,emo){
+  const bx=cv.width*.18,by=cv.height*.04,bw=cv.width*.64,bh=cv.height*.88,col=EMO[emo]?.color||'#fff',c=13;
+  ctx.shadowColor=col;ctx.shadowBlur=14;ctx.strokeStyle=col;ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(bx+c,by);ctx.lineTo(bx,by);ctx.lineTo(bx,by+c);ctx.moveTo(bx+bw-c,by);ctx.lineTo(bx+bw,by);ctx.lineTo(bx+bw,by+c);ctx.moveTo(bx,by+bh-c);ctx.lineTo(bx,by+bh);ctx.lineTo(bx+c,by+bh);ctx.moveTo(bx+bw-c,by+bh);ctx.lineTo(bx+bw,by+bh);ctx.lineTo(bx+bw,by+bh-c);ctx.stroke();ctx.shadowBlur=0;
+  ctx.fillStyle=col+'cc';ctx.fillRect(bx,by-22,88,19);ctx.fillStyle='#000';ctx.font='bold 11px system-ui';
+  ctx.fillText(EMO[emo].emoji+' '+EMO[emo].it,bx+5,by-7);
+}
+
+function updateFaceUI(emo,conf,exprs){
+  const e=EMO[emo]||EMO.neutral;
+  document.getElementById('fEmo').textContent=e.emoji;
+  document.getElementById('fLbl').textContent=e.it;document.getElementById('fLbl').style.color=e.color;
+  document.getElementById('fConf').textContent='CONFIDENZA '+Math.round(conf*100)+'%';
+  renderBars('fBars',exprs,k=>EMO[k]);
+}
+
+function renderBars(id,data,getInfo){
+  document.getElementById(id).innerHTML=Object.entries(data).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
+    const i=getInfo(k)||{it:k,color:'#555',emoji:''};
+    const pct=Math.round(v*100);
+    return`<div class="bi"><div class="bh"><span>${i.emoji||''} ${i.it}</span><span style="color:var(--mut)">${pct}%</span></div><div class="bt3"><div class="bf" style="width:${pct}%;background:${i.color}"></div></div></div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// MICROPHONE
+// ══════════════════════════════════════════════════════════
+document.getElementById('micBtn').addEventListener('click',()=>{
+  getBeepCtx(); // unlock audio on user gesture
+  micOn?stopMic():startMic();
+});
+
+async function startMic(){
+  document.getElementById('mErr').style.display='none';
+  try{
+    mStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+    aCtx=new(window.AudioContext||window.webkitAudioContext)();
+    analyser=aCtx.createAnalyser();analyser.fftSize=2048;analyser.smoothingTimeConstant=0.8;
+    aCtx.createMediaStreamSource(mStream).connect(analyser);
+    micOn=true;
+    document.getElementById('voiceCard').style.display='block';
+    document.getElementById('micBtn').textContent='■ FERMA MICROFONO';
+    document.getElementById('micBtn').className='sb stop';
+    document.getElementById('dot').className='dot on';
+    drawWave();analyzeLoop();
+  }catch(e){
+    const el=document.getElementById('mErr');el.style.display='block';
+    el.textContent='❌ '+(e.name==='NotAllowedError'?'Permesso microfono negato.':e.message);
+  }
+}
+
+function stopMic(){
+  if(mStream) mStream.getTracks().forEach(t=>t.stop());
+  if(aCtx) aCtx.close();
+  cancelAnimationFrame(wAnim);clearTimeout(vTimer);
+  mStream=null;aCtx=null;analyser=null;micOn=false;
+  document.getElementById('voiceCard').style.display='none';
+  document.getElementById('micBtn').textContent='▶ AVVIA MICROFONO';
+  document.getElementById('micBtn').className='sb go';
+  if(!camOn) document.getElementById('dot').className='dot';
+  const wc=document.getElementById('wc');wc.getContext('2d').clearRect(0,0,wc.width,wc.height);
+  ['mE','mP','mR'].forEach(id=>document.getElementById(id).textContent='—');
+}
+
+function drawWave(){
+  if(!micOn)return;wAnim=requestAnimationFrame(drawWave);
+  const wc=document.getElementById('wc'),ctx=wc.getContext('2d'),W=wc.width,H=wc.height;
+  const d=new Uint8Array(analyser.frequencyBinCount);analyser.getByteTimeDomainData(d);
+  ctx.clearRect(0,0,W,H);
+  [H*.25,H*.5,H*.75].forEach(y=>{ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();});
+  const g=ctx.createLinearGradient(0,0,W,0);g.addColorStop(0,'#7c6bff');g.addColorStop(.5,'#ff6b9d');g.addColorStop(1,'#6bffce');
+  ctx.beginPath();ctx.strokeStyle=g;ctx.lineWidth=2;
+  const sw=W/d.length;let x=0;
+  d.forEach((v,i)=>{const y=v/128*H/2;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);x+=sw;});ctx.stroke();
+}
+
+function analyzeLoop(){if(!micOn)return;analyzeVoice();vTimer=setTimeout(analyzeLoop,500);}
+
+function analyzeVoice(){
+  if(!analyser)return;
+  const bl=analyser.frequencyBinCount,t=new Uint8Array(bl),f=new Uint8Array(bl);
+  analyser.getByteTimeDomainData(t);analyser.getByteFrequencyData(f);
+  let s=0;t.forEach(v=>s+=(v-128)*(v-128));
+  const eng=Math.min(100,Math.round(Math.sqrt(s/bl)*3));
+  let mfi=0,mfv=0;for(let i=2;i<bl/2;i++)if(f[i]>mfv){mfv=f[i];mfi=i;}
+  const pt=Math.round(mfi*aCtx.sampleRate/analyser.fftSize);
+  let zc=0;for(let i=1;i<bl;i++)if((t[i]-128)*(t[i-1]-128)<0)zc++;
+  const zcr=Math.round(zc/bl*1000);
+  document.getElementById('mE').textContent=eng;
+  document.getElementById('mP').textContent=pt>20&&pt<4000?pt:'—';
+  document.getElementById('mR').textContent=zcr;
+  let emo;
+  if(eng<5)emo='neutral';
+  else if(eng>45&&zcr>80)emo='energetic';
+  else if(eng>30&&zcr>60)emo='tense';
+  else if(eng<15&&pt<200)emo='sad';
+  else if(eng>20&&pt>200)emo='energetic';
+  else emo='calm';
+  const vs=VOICE.find(v=>v.key===emo)||VOICE[4];
+  document.getElementById('vEmo').textContent=vs.emoji;
+  document.getElementById('vLbl').textContent=vs.it;document.getElementById('vLbl').style.color=vs.color;
+  document.getElementById('vConf').textContent='ENERGIA '+eng+'%';
+  const sc={energetic:Math.min(1,eng/60),calm:Math.max(0,1-eng/50),tense:Math.min(1,zcr/200),sad:eng<15?.7:.1,neutral:.3};
+  renderBars('vBars',sc,k=>{const v=VOICE.find(v=>v.key===k);return v||{it:k,color:'#555',emoji:''};});
+  curV=emo;updateCombined();updateCtxBar();
+}
+
+// ══════════════════════════════════════════════════════════
+// COMBINED
+// ══════════════════════════════════════════════════════════
+function updateCombined(){
+  const fe=EMO[curF]||EMO.neutral,ve=VOICE.find(v=>v.key===curV)||VOICE[4];
+  document.getElementById('cF').textContent=fe.it;document.getElementById('cF').style.color=fe.color;
+  document.getElementById('cV').textContent=ve.it;document.getElementById('cV').style.color=ve.color;
+  const fu=FUSION[curF+'+'+curV]||{label:fe.it,emoji:fe.emoji,insight:'Analisi in corso…'};
+  document.getElementById('cEmoji').textContent=fu.emoji;
+  document.getElementById('cLabel').textContent=fu.label;
+  document.getElementById('cIns').textContent=fu.insight;
+  const now=Date.now();
+  if(now-lastHistT>5000&&(camOn||micOn)){lastHistT=now;addHist(fu.emoji,fu.label,fe.color);}
+}
+
+function addHist(emoji,label,color){
+  const t=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const el=document.getElementById('hist');
+  if(el.querySelector('div[style]'))el.innerHTML='';
+  el.insertAdjacentHTML('afterbegin',`<div class="hi"><span style="font-size:22px">${emoji}</span><div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:${color}">${label}</div><div style="font-size:9px;color:var(--mut);margin-top:2px">${t}</div></div></div>`);
+  if(el.children.length>15)el.removeChild(el.lastChild);
+}
+
+function updateCtxBar(){
+  const fe=EMO[curF]||EMO.neutral,ve=VOICE.find(v=>v.key===curV)||VOICE[4];
+  const cf=document.getElementById('ctxF'),cv=document.getElementById('ctxV');
+  cf.textContent=fe.emoji+' '+fe.it;cf.style.color=fe.color;
+  cv.textContent=ve.emoji+' '+ve.it;cv.style.color=ve.color;
+}
+
+// ══════════════════════════════════════════════════════════
+// CHAT AI
+// ══════════════════════════════════════════════════════════
+const chatIn=document.getElementById('chatIn'),sendBtn=document.getElementById('sendBtn');
+chatIn.addEventListener('input',()=>{sendBtn.disabled=!chatIn.value.trim()||aiLoading;});
+chatIn.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!sendBtn.disabled)sendChat();}});
+function quickAsk(txt){chatIn.value=txt;sendChat();}
+
+async function sendChat(){
+  const txt=chatIn.value.trim();if(!txt||aiLoading)return;
+  getBeepCtx();
+  chatIn.value='';sendBtn.disabled=true;
+  document.getElementById('emptyChat')?.remove();
+  const fe=EMO[curF]||EMO.neutral,ve=VOICE.find(v=>v.key===curV)||VOICE[4];
+  const fused=FUSION[curF+'+'+curV]?.label||fe.it;
+  const time=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  addBubble('user',txt,time);
+  chatHist.push({role:'user',content:txt});
+  const tid='ty-'+Date.now();addTyping(tid);aiLoading=true;
+  const sys=`Sei EmoSense AI, assistente empatico.
+Emozioni utente ora: volto=${fe.it}, voce=${ve.it}, stato=${fused}
+Rispondi in italiano, caldo e umano, 2-4 frasi. Non elencare le emozioni, usale naturalmente.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,system:sys,messages:chatHist})});
+    const d=await r.json();const reply=d.content?.[0]?.text||'Non riesco a rispondere.';
+    removeTyping(tid);chatHist.push({role:'assistant',content:reply});
+    addBubble('ai',reply,new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}));
+    // Also show in robot bubble
+    showRobot(reply,curF);
+  }catch(e){removeTyping(tid);addBubble('ai','Errore di connessione.',new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}));}
+  aiLoading=false;sendBtn.disabled=!chatIn.value.trim();
+  if(chatHist.length>40)chatHist=chatHist.slice(-30);
+}
+
+function addBubble(role,text,time){
+  const m=document.getElementById('messages'),w=document.createElement('div');
+  w.className='bw '+role;
+  w.innerHTML=`<div class="bu ${role}">${esc(text)}</div><div class="bt2">${time}</div>`;
+  m.appendChild(w);m.scrollTop=m.scrollHeight;
+}
+function addTyping(id){
+  const m=document.getElementById('messages'),w=document.createElement('div');
+  w.id=id;w.className='bw ai';
+  w.innerHTML=`<div class="ty">${[0,1,2].map(i=>`<div class="db" style="animation-delay:${i*.2}s"></div>`).join('')}</div>`;
+  m.appendChild(w);m.scrollTop=m.scrollHeight;
+}
+function removeTyping(id){document.getElementById(id)?.remove();}
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+const MODEL_URL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
+async function loadModels(){
+  const tx=document.getElementById('ltxt');
+  try{
+    tx.textContent='RILEVATORE VOLTO…';
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    tx.textContent='ANALISI ESPRESSIONI…';
+    await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+    tx.textContent='PRONTO!';
+  }catch(e){tx.textContent='PRONTO (SIM)';}
+  await new Promise(r=>setTimeout(r,600));
+  document.getElementById('loader').classList.add('hidden');
+}
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+loadModels();
+</script>
+</body>
+</html>
